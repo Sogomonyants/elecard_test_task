@@ -1,0 +1,170 @@
+<!doctype html>
+<html>
+
+<head>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	<link rel="stylesheet" href="style.css">
+<title>Тестовое задание</title>
+
+</head>
+
+<body>
+<header>
+  Шапка сайта
+</header>
+
+<form>
+	<input type="radio" id="img" name="test" value="img"> 
+	<label for="img">Карточки</label>
+	<input type="radio" id="tree" name="test" value="tree">
+	<label for="tree">Дерево</label>
+	<button type="submit">Применить</button>
+</form>
+
+<div id="myModal" class="modal">
+  <span class="close">×</span>
+  <img class="modal-content" id="img01">
+  <div id="caption"></div>
+</div>
+
+<div id="content"></div>
+
+	<script>
+		var form = document.querySelector("form");
+		var content = document.querySelector("#content");
+
+		form.addEventListener("submit", function(event) {
+			var data = new FormData(form);
+			var output = "";
+			progress = document.createElement('div');
+			progress.setAttribute('id','progress');
+			content.appendChild(progress);
+			for (const entry of data) {
+				output = entry[1];
+			};
+	
+			var requestURL = 'http://contest.elecard.ru/frontend_data/catalog.json';
+			var request = new XMLHttpRequest();
+			request.open('GET', requestURL);
+			request.responseType = 'json';
+			request.send();
+			
+			request.onload = function() {
+				var all_json = request.response;
+				get_content(all_json);
+			}
+			
+			if(output == 'img'){
+				function get_content(jsonObj) {
+					content.innerHTML = '';
+					var row = document.createElement('div');
+					row.classList.add('row');
+					
+					for(var i = 0; i < jsonObj.length; i++){
+						var col_md_4 = document.createElement('div');
+						col_md_4.classList.add('col-md-4');
+						var card = document.createElement('div');
+						card.classList.add('card');
+						var card_img_top = document.createElement('img');
+						card_img_top.classList.add('card-img-top');
+						card_img_top.src = 'http://contest.elecard.ru/frontend_data/' + jsonObj[i]['image'];
+						var card_body = document.createElement('div');
+						card_body.classList.add('card-body');
+						var p_lvl1 = document.createElement('p');
+						p_lvl1.classList.add('card-text');
+						var p_lvl2 = document.createElement('p');
+						p_lvl2.classList.add('card-text');
+						p_lvl1.textContent = jsonObj[i]['category'];
+						var text_muted = document.createElement('small');
+						text_muted.classList.add('text-muted');
+						text_muted.textContent = new Date(jsonObj[i]['timestamp']);
+						
+						p_lvl2.appendChild(text_muted);
+						card_body.appendChild(p_lvl1);
+						card_body.appendChild(p_lvl2);
+						card.appendChild(card_img_top);
+						card.appendChild(card_body);
+						col_md_4.appendChild(card);
+						row.appendChild(col_md_4);
+						content.appendChild(row)
+					}
+				}
+			} else if(output == 'tree'){
+				content.innerHTML = '';
+				var all_category = [];
+				function get_content(jsonObj) {
+					
+					for(var i = 0; i < jsonObj.length; i++){
+						category = jsonObj[i]['category'];
+						all_category.push(category);
+					}
+					
+					var set = new Set(all_category);
+					var category = Array.from(set);
+					var all_img = [];
+
+					for(var c = 0; c < category.length; c++){
+						var ul_lvl1 = document.createElement('ul');
+						ul_lvl1.classList.add('myUL');
+						var li_lvl1 = document.createElement('li');
+						var span = document.createElement('span');
+						span.classList.add('caret');
+						span.textContent = category[c];
+						
+						var ul_lvl2 = document.createElement('ul');
+						ul_lvl2.classList.add('nested');
+						for(var a = 0; a < jsonObj.length; a++){
+							if(category[c] == jsonObj[a]['category']){
+								var li_lvl2 = document.createElement('li');
+								var img = document.createElement('img');
+								img.setAttribute('id','myImg');
+								img.src = 'http://contest.elecard.ru/frontend_data/' + jsonObj[a]['image'];
+								all_img.push(img);
+								li_lvl2.appendChild(img);
+								ul_lvl2.appendChild(li_lvl2);
+							}
+						}
+					
+						li_lvl1.appendChild(span);
+						li_lvl1.appendChild(ul_lvl2);
+						ul_lvl1.appendChild(li_lvl1);
+						content.appendChild(ul_lvl1);
+					}
+					
+					var toggler = document.getElementsByClassName("caret");
+					for (var j = 0; j < toggler.length; j++) {
+  						toggler[j].addEventListener("click", function() {
+    					this.parentElement.querySelector(".nested").classList.toggle("active");
+    					this.classList.toggle("caret-down");
+ 		 				});
+					}
+
+					var myImg = document.getElementById('myImg');
+					var modal = document.getElementById('myModal');
+					var modalImg = document.getElementById("img01");
+					var captionText = document.getElementById("caption");
+					all_img.forEach((all_img) =>{
+						all_img.onclick = function(){
+    						modal.style.display = "block";
+    						modalImg.src = this.src;
+    						captionText.innerHTML = this.alt;
+						}
+					})
+					
+					var span_close = document.getElementsByClassName("close")[0];
+					span_close.onclick = function() { 
+    					modal.style.display = "none";
+					}
+				}
+			}
+			event.preventDefault();
+		}, false);
+	</script>
+
+<footer>
+  Подвал сайта
+</footer>
+
+</body>
+
+</html>
